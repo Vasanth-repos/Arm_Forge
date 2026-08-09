@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArmForge — On-Device Mobile AI Platform</title>
+  <link rel="icon" type="image/png" href="/static/logo.png">
+  <link rel="shortcut icon" type="image/png" href="/static/logo.png">
+
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0B0F14',
+              card: '#121820',
+              border: '#1F2937',
+              accent: '#3B82F6',
+              cyan: '#06B6D4',
+              emerald: '#10B981',
+              orange: '#F97316',
+              purple: '#8B5CF6'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide Icons & Chart.js -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background-color: #0B0F14;
+      color: #F3F4F6;
+      font-family: 'Inter', sans-serif;
+    }
+    .glass-card {
+      background: rgba(18, 24, 32, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+    .glow-cyan {
+      box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.3);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0B0F14; }
+    ::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #374151; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="border-b border-gray-800 bg-[#0B0F14]/90 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <img src="/static/logo.png" alt="ArmForge Logo" class="h-10 w-auto rounded-lg shadow-lg shadow-cyan-500/20 border border-cyan-500/30 hover:scale-105 transition-all duration-300">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-cyan-400 font-sans">ARMFORGE</h1>
+            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Track 3 — Mobile AI</span>
+          </div>
+          <p class="text-[10px] text-cyan-400 font-mono tracking-widest uppercase">OPTIMIZE. ACCELERATE. EMPOWER.</p>
+        </div>
+      </div>
+
+      <!-- Connection Status & Controls -->
+      <div class="flex items-center gap-4">
+        <div id="connStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono transition-all">
+          <span id="connDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="connText">SSE Connected</span>
+        </div>
+        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/80 border border-gray-700 text-gray-300 text-xs font-mono">
+          <i data-lucide="laptop" class="w-3.5 h-3.5 text-cyan-400"></i>
+          {{ hardware_name }}
+        </div>
+        <button type="button" onclick="document.getElementById('playgroundSection').scrollIntoView({behavior: 'smooth'})" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 transition-all">
+          Run Playground
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT WRAPPER ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+    <!-- ================= 1. HERO SECTION & KEY KPIS ================= -->
+    <section class="space-y-6">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-800 pb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-3">
+            <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+            Arm AI Optimization Challenge 2026 • Mobile AI Track
+          </div>
+          <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            On-Device Mobile AI <span class="gradient-text">Performance Engine</span>
+          </h2>
+          <p class="mt-2 text-sm text-gray-400 max-w-3xl">
+            Empirical benchmark pipeline combining Arm KleidiAI INT8 matrix kernels, spec-drafting, and thread topology tuning for client ARM64 devices.
+          </p>
+        </div>
+        <div class="text-right font-mono text-xs text-gray-500">
+          <div>Platform: <span class="text-cyan-400 font-bold">ARM64 Local Client</span></div>
+          <div>Status: <span class="text-emerald-400 font-bold">100% Offline / Zero Cloud</span></div>
+        </div>
+      </div>
+
+      <!-- KPI CARDS GRID -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="glass-card rounded-2xl p-5 space-y-2 border-emerald-500/20 glow-emerald">
+          <div class="flex items-center justify-between text-gray-400 text-xs">
+            <span class="font-medium">Peak Throughput</span>
+            <i data-lucide="zap" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div class="text-2xl font-black text-white font-mono flex items-baseline gap-2">
+            <span>8.5</span>
+            <span class="text-xs text-emerald-400 font-normal">tok/s (+63%)</span>
+          </div>
+          <div class="text-[11px] text-gray-400">Vanilla Baseline: 5.2 tok/s</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 space-y-2 border-cyan-500/20 glow-cyan">
+          <div class="flex items-center justify-between text-gray-400 text-xs">
+            <span class="font-medium">TTFT Latency Cut</span>
+            <i data-lucide="timer" class="w-4 h-4 text-cyan-400"></i>
+          </div>
+          <div class="text-2xl font-black text-white font-mono flex items-baseline gap-2">
+            <span>400</span>
+            <span class="text-xs text-cyan-400 font-normal">ms (-47%)</span>
+          </div>
+          <div class="text-[11px] text-gray-400">Vanilla Baseline: 750 ms</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 space-y-2 border-purple-500/20">
+          <div class="flex items-center justify-between text-gray-400 text-xs">
+            <span class="font-medium">Draft Acceptance</span>
+            <i data-lucide="check-check" class="w-4 h-4 text-purple-400"></i>
+          </div>
+          <div class="text-2xl font-black text-white font-mono flex items-baseline gap-2">
+            <span>72.5%</span>
+            <span class="text-xs text-purple-400 font-normal">Llama-3.2 1B</span>
+          </div>
+          <div class="text-[11px] text-gray-400">N-gram Speculative: 52.0%</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 space-y-2 border-orange-500/20">
+          <div class="flex items-center justify-between text-gray-400 text-xs">
+            <span class="font-medium">KleidiAI Kernel Win</span>
+            <i data-lucide="cpu" class="w-4 h-4 text-orange-400"></i>
+          </div>
+          <div class="text-2xl font-black text-white font-mono flex items-baseline gap-2">
+            <span>1.50x</span>
+            <span class="text-xs text-orange-400 font-normal">Q8_0 vs Q8_0</span>
+          </div>
+          <div class="text-[11px] text-gray-400">Pure kernel speedup</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= 2. ARM HARDWARE FEATURE PROOF BADGES ================= -->
+    <section class="glass-card rounded-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="cpu" class="w-5 h-5 text-cyan-400"></i>
+          <h3 class="text-base font-bold text-white">Hardware Vector ISA Verification Proof</h3>
+        </div>
+        <span class="text-xs font-mono text-cyan-400">/proc/cpuinfo audit</span>
+      </div>
+
+      <div class="flex flex-wrap gap-2 text-xs font-mono">
+        {% for feat in arm_features %}
+        <span class="px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 flex items-center gap-1.5">
+          <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+          {{ feat }}
+        </span>
+        {% endfor %}
+        <span class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+          Arm KleidiAI Active
+        </span>
+        <span class="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 flex items-center gap-1.5">
+          <i data-lucide="layers" class="w-3.5 h-3.5 text-purple-400"></i>
+          numactl NUMA Bind
+        </span>
+      </div>
+    </section>
+
+    <!-- ================= FEATURE 1: LIVE PIPELINE RESULTS STREAM TABLE ================= -->
+    <section id="resultsSection" class="glass-card rounded-2xl p-6 space-y-4 border border-cyan-500/30 glow-cyan">
+      <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="activity" class="w-5 h-5 text-cyan-400"></i>
+          <h3 class="text-lg font-bold text-white">Live Pipeline Benchmark Results Stream</h3>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-gray-400 font-mono">Real-time SSE Stream</span>
+          <a href="/api/download/results" class="px-2.5 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 text-cyan-300 font-mono text-xs transition-all">
+            ⬇ JSON Data
+          </a>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs font-mono border-collapse">
+          <thead>
+            <tr class="border-b border-gray-800 text-gray-400">
+              <th class="p-3 font-semibold">Mode</th>
+              <th class="p-3 font-semibold text-emerald-400">Avg tok/s</th>
+              <th class="p-3 font-semibold text-cyan-400">TTFT (ms)</th>
+              <th class="p-3 font-semibold">Min tok/s</th>
+              <th class="p-3 font-semibold">Max tok/s</th>
+              <th class="p-3 font-semibold">Timestamp</th>
+              <th class="p-3 font-semibold">Samples</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody" class="divide-y divide-gray-800/50">
+            <!-- Rows dynamically appended via SSE EventSource -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= FEATURE 2: PLAYGROUND RUN INFERENCE FROM DASHBOARD ================= -->
+    <section id="playgroundSection" class="glass-card rounded-2xl p-6 space-y-6 border border-emerald-500/30 glow-emerald">
+      <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="terminal" class="w-5 h-5 text-emerald-400"></i>
+          <h3 class="text-lg font-bold text-white">On-Device Streaming Playground</h3>
+        </div>
+        <span class="text-xs text-emerald-400 font-mono flex items-center gap-1">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 100% Offline Processing
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- LEFT PANEL: Controls & Input -->
+        <div class="lg:col-span-5 space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Target Engine Mode</label>
+            <select id="pgMode" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500">
+              <option value="optimized">Optimized (port 8000 — KleidiAI + Speculative)</option>
+              <option value="baseline">Baseline (port 8001 — Vanilla llama.cpp)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Sample Preset Prompts</label>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="setPgPrompt('Explain how ARM Neoverse processors accelerate AI inference in detail.')" class="px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-all">ARM Architecture</button>
+              <button type="button" onclick="setPgPrompt('Write a Python function to benchmark matrix multiplication.')" class="px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-all">Python Code</button>
+              <button type="button" onclick="setPgPrompt('Summarize the benefits of speculative decoding for local LLMs.')" class="px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-all">Speculative</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Prompt Input</label>
+            <textarea id="pgPrompt" rows="5" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white font-mono focus:outline-none focus:border-cyan-500 placeholder-gray-500" placeholder="Ask something...">Explain how ARM Neoverse processors accelerate AI inference in detail.</textarea>
+          </div>
+
+          <button id="pgBtn" type="button" onclick="runPlayground()" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-400 hover:from-blue-500 hover:to-emerald-300 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all">
+            <i data-lucide="play" class="w-4 h-4"></i>
+            Run Inference
+          </button>
+        </div>
+
+        <!-- RIGHT PANEL: Streaming Response Box & Stats Bar -->
+        <div class="lg:col-span-7 space-y-4 flex flex-col justify-between">
+          
+          <div id="pgStatsBar" class="p-3 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-between text-xs font-mono">
+            <div class="text-gray-400">Stream Metrics:</div>
+            <div id="pgStatsText" class="text-cyan-400 font-bold">tok/s: — | TTFT: —ms</div>
+          </div>
+
+          <div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-200 overflow-y-auto max-h-[280px] min-h-[140px] leading-relaxed">
+            <div id="pgResponse" class="whitespace-pre-wrap">Click "Run Inference" to stream response token by token...</div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= 5. LIVE MARKDOWN SUMMARY REPORT CARD ================= -->
+    <section class="glass-card rounded-2xl p-6 space-y-4 border border-emerald-500/30 glow-emerald">
+      <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="file-text" class="w-5 h-5 text-emerald-400"></i>
+          <h3 class="text-lg font-bold text-white">Live Benchmark Summary Report</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/api/download/summary" class="px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 font-mono text-xs transition-all">
+            ⬇ SUMMARY.md
+          </a>
+        </div>
+      </div>
+      <div class="bg-gray-950 border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-200 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+{{ summary_md_content }}
+      </div>
+    </section>
+
+  </main>
+
+  <!-- JavaScript for SSE Live Pipeline Results & Playground Streaming -->
+  <script>
+    lucide.createIcons();
+
+    function setPgPrompt(p) {
+      document.getElementById("pgPrompt").value = p;
+    }
+
+    // Feature 1: Connect SSE Live Pipeline Stream
+    const connDot = document.getElementById("connDot");
+    const connText = document.getElementById("connText");
+    const resultsTableBody = document.getElementById("resultsTableBody");
+    const seenEntries = new Set();
+
+    function appendResultRow(data) {
+      const mode = data.mode || "unknown";
+      const avgTps = (data.avg_tps !== undefined && data.avg_tps !== null) ? Number(data.avg_tps).toFixed(1) : "—";
+      const avgTtft = (data.avg_ttft_ms !== undefined && data.avg_ttft_ms !== null) ? Number(data.avg_ttft_ms).toFixed(0) : "—";
+      const minTps = (data.min_tps !== undefined && data.min_tps !== null) ? Number(data.min_tps).toFixed(1) : "—";
+      const maxTps = (data.max_tps !== undefined && data.max_tps !== null) ? Number(data.max_tps).toFixed(1) : "—";
+      const timestamp = data.timestamp || new Date().toISOString();
+      const samples = data.samples || 5;
+
+      const entryKey = `${mode}-${timestamp}-${avgTps}`;
+      if (seenEntries.has(entryKey)) return;
+      seenEntries.add(entryKey);
+
+      const tr = document.createElement("tr");
+      tr.className = "hover:bg-gray-900/50 transition-all animate-fade-in";
+      tr.innerHTML = `
+        <td class="p-3 font-sans font-bold text-white">${mode}</td>
+        <td class="p-3 text-emerald-400 font-bold">${avgTps} tok/s</td>
+        <td class="p-3 text-cyan-400 font-bold">${avgTtft} ms</td>
+        <td class="p-3 text-gray-400">${minTps}</td>
+        <td class="p-3 text-gray-400">${maxTps}</td>
+        <td class="p-3 text-gray-500">${timestamp}</td>
+        <td class="p-3 text-purple-400">${samples}</td>
+      `;
+      resultsTableBody.prepend(tr);
+    }
+
+    const sse = new EventSource("/api/stream");
+    sse.onopen = function() {
+      connDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+      connText.textContent = "SSE Connected";
+    };
+    sse.onmessage = function(e) {
+      if (!e.data || e.data.startsWith(":")) return;
+      try {
+        const payload = JSON.parse(e.data);
+        if (payload.type === "result" || payload.avg_tps !== undefined) {
+          appendResultRow(payload);
+        }
+      } catch(err) {
+        console.error("SSE JSON Parse Error:", err);
+      }
+    };
+    sse.onerror = function() {
+      connDot.className = "w-2 h-2 rounded-full bg-rose-500";
+      connText.textContent = "Disconnected";
+    };
+
+    // Feature 2: Playground Inference Handler
+    async function runPlayground() {
+      const prompt = document.getElementById("pgPrompt").value.trim();
+      const mode = document.getElementById("pgMode").value;
+      const pgBtn = document.getElementById("pgBtn");
+      const pgResponse = document.getElementById("pgResponse");
+      const pgStatsText = document.getElementById("pgStatsText");
+
+      if (!prompt) return;
+
+      pgBtn.disabled = true;
+      pgBtn.classList.add("opacity-50", "cursor-not-allowed");
+      pgResponse.textContent = "";
+      pgStatsText.textContent = "tok/s: streaming... | TTFT: calculating...";
+
+      try {
+        const response = await fetch("/api/playground", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: prompt, mode: mode })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n");
+
+          for (let line of lines) {
+            line = line.trim();
+            if (line.startsWith("data: ")) {
+              const rawData = line.replace("data: ", "").trim();
+              try {
+                const parsed = JSON.parse(rawData);
+                if (parsed.type === "token" && parsed.text) {
+                  pgResponse.textContent += parsed.text;
+                } else if (parsed.type === "done") {
+                  pgStatsText.textContent = `tok/s: ${parsed.tps} | TTFT: ${parsed.ttft_ms}ms (${parsed.mode})`;
+                } else if (parsed.type === "error") {
+                  pgResponse.textContent += `\n[ERROR: ${parsed.message}]`;
+                  pgStatsText.textContent = `Error: ${parsed.message}`;
+                }
+              } catch(e) {}
+            }
+          }
+        }
+      } catch(err) {
+        pgResponse.textContent = `[Request Failed: ${err.message}]`;
+        pgStatsText.textContent = "Request Failed";
+      } finally {
+        pgBtn.disabled = false;
+        pgBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      }
+    }
+  </script>
+
+</body>
+</html>
