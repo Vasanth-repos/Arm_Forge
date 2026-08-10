@@ -740,6 +740,50 @@
     const resultsTableBody = document.getElementById("resultsTableBody");
     const seenEntries = new Set();
 
+    function updateChartsWithResult(mode, avgTpsNum, avgTtftNum) {
+      if (!tpsChart || !ttftChart) return;
+      const m = mode.toLowerCase();
+
+      // Chart 1 & 2 Labels: ['Baseline Q8_0', 'KleidiAI Q8_0', 'KleidiAI Q4_K', 'Spec Draft (3B+1B)', 'Full Stack']
+      let idx = -1;
+      if (m.includes("baseline")) {
+        idx = 0; // Baseline Q8_0
+      } else if (m.includes("kleidi") && (m.includes("q8") || m.includes("8"))) {
+        idx = 1; // KleidiAI Q8_0
+      } else if (m.includes("kleidi") || m.includes("q4")) {
+        idx = 2; // KleidiAI Q4_K
+      } else if (m.includes("spec") || m.includes("draft") || m.includes("ngram")) {
+        idx = 3; // Spec Draft
+      } else if (m.includes("opt") || m.includes("full")) {
+        idx = 4; // Full Stack / Optimized
+      }
+
+      if (idx >= 0) {
+        if (avgTpsNum > 0) {
+          tpsChart.data.datasets[0].data[idx] = Number(avgTpsNum.toFixed(1));
+          tpsChart.update();
+        }
+        if (avgTtftNum > 0) {
+          ttftChart.data.datasets[0].data[idx] = Number(avgTtftNum.toFixed(0));
+          ttftChart.update();
+        }
+      }
+
+      // Update Chart 3 (llama-bench pp vs tg)
+      if (lbChart) {
+        if (m.includes("baseline")) {
+          lbChart.data.datasets[1].data[0] = Number(avgTpsNum.toFixed(1));
+          lbChart.update();
+        } else if (m.includes("kleidi") && (m.includes("q8") || m.includes("8"))) {
+          lbChart.data.datasets[1].data[1] = Number(avgTpsNum.toFixed(1));
+          lbChart.update();
+        } else if (m.includes("kleidi") || m.includes("opt") || m.includes("q4")) {
+          lbChart.data.datasets[1].data[2] = Number(avgTpsNum.toFixed(1));
+          lbChart.update();
+        }
+      }
+    }
+
     function appendResultRow(data) {
       const mode = (data.mode || "").toString().trim().toLowerCase();
       if (!mode || mode === "benchmark" || mode === "unknown" || mode === "none") return;
@@ -774,6 +818,9 @@
         <td class="p-3 text-purple-400">${samples}</td>
       `;
       resultsTableBody.prepend(tr);
+
+      // Dynamically update Before & After visual charts with empirical SSE result
+      updateChartsWithResult(mode, avgTpsNum, avgTtftNum);
     }
 
     const sse = new EventSource("/api/stream");
