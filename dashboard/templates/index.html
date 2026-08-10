@@ -152,7 +152,7 @@
         <div class="glass-card rounded-2xl p-5 space-y-2 border-emerald-500/20 glow-emerald hover:border-emerald-500/50 hover:shadow-emerald-500/20">
           <div class="flex items-center justify-between text-gray-400 text-xs">
             <span class="font-medium">Peak Throughput</span>
-            <i data-lucide="zap" class="w-4 h-4 text-emerald-400 group-hover:scale-125 transition-transform"></i>
+            <i data-lucide="zap" class="w-4 h-4 text-emerald-400"></i>
           </div>
           <div class="text-2xl font-black text-white font-mono flex items-baseline gap-2">
             <span>8.5</span>
@@ -195,6 +195,121 @@
             <span class="text-xs text-orange-400 font-normal">Q8_0 vs Q8_0</span>
           </div>
           <div class="text-[11px] text-gray-400">Pure kernel speedup</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= BENCHMARK TELEMETRY WORKFLOW ARCHITECTURE ================= -->
+    <section class="glass-card rounded-2xl p-6 space-y-6 border border-emerald-500/30 glow-emerald">
+      <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="workflow" class="w-5 h-5 text-emerald-400"></i>
+          <h3 class="text-lg font-bold text-white">Live Benchmark Telemetry Workflow Architecture</h3>
+        </div>
+        <span class="text-xs text-emerald-400 font-mono flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          Real-Time Telemetry Pipeline
+        </span>
+      </div>
+
+      <!-- Flowchart Steps Grid (Exact 7-Step Pipeline) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 relative">
+        
+        <!-- STEP 1: Benchmark -->
+        <div class="group relative p-4 rounded-xl bg-gray-900/90 border border-gray-800 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 space-y-2 text-center flex flex-col justify-between">
+          <div class="w-8 h-8 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono font-bold text-xs border border-emerald-500/30 group-hover:scale-110 transition-transform">
+            1
+          </div>
+          <div>
+            <h4 class="text-xs font-black tracking-wider text-white uppercase font-mono">Benchmark</h4>
+            <p class="text-[10px] text-emerald-400 font-mono mt-0.5">run_all.sh</p>
+          </div>
+          <p class="text-[11px] text-gray-400 leading-tight">Pipeline execution trigger for all test configs.</p>
+          <div class="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-emerald-400 font-bold text-lg pointer-events-none">→</div>
+          <div class="lg:hidden text-center text-emerald-400 font-bold text-base py-1">↓</div>
+        </div>
+
+        <!-- STEP 2: llama-server -->
+        <div class="group relative p-4 rounded-xl bg-gray-900/90 border border-gray-800 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1 transition-all duration-300 space-y-2 text-center flex flex-col justify-between">
+          <div class="w-8 h-8 mx-auto rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono font-bold text-xs border border-cyan-500/30 group-hover:scale-110 transition-transform">
+            2
+          </div>
+          <div>
+            <h4 class="text-xs font-black tracking-wider text-white uppercase font-mono">llama-server</h4>
+            <p class="text-[10px] text-cyan-400 font-mono mt-0.5">Ports 8000 / 8001</p>
+          </div>
+          <p class="text-[11px] text-gray-400 leading-tight">Background C++ backend model instances.</p>
+          <div class="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-cyan-400 font-bold text-lg pointer-events-none">→</div>
+          <div class="lg:hidden text-center text-cyan-400 font-bold text-base py-1">↓</div>
+        </div>
+
+        <!-- STEP 3: Python Benchmark Script -->
+        <div class="group relative p-4 rounded-xl bg-gray-900/90 border border-gray-800 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 space-y-2 text-center flex flex-col justify-between">
+          <div class="w-8 h-8 mx-auto rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-mono font-bold text-xs border border-purple-500/30 group-hover:scale-110 transition-transform">
+            3
+          </div>
+          <div>
+            <h4 class="text-xs font-black tracking-wider text-white uppercase font-mono">Python Script</h4>
+            <p class="text-[10px] text-purple-400 font-mono mt-0.5">run_bench.py</p>
+          </div>
+          <p class="text-[11px] text-gray-400 leading-tight">Test harness driver &amp; warmup discard controller.</p>
+          <div class="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-purple-400 font-bold text-lg pointer-events-none">→</div>
+          <div class="lg:hidden text-center text-purple-400 font-bold text-base py-1">↓</div>
+        </div>
+
+        <!-- STEP 4: HTTP Requests -->
+        <div class="group relative p-4 rounded-xl bg-gray-900/90 border border-gray-800 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300 space-y-2 text-center flex flex-col justify-between">
+          <div class="w-8 h-8 mx-auto rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-mono font-bold text-xs border border-blue-500/30 group-hover:scale-110 transition-transform">
+            4
+          </div>
+          <div>
+            <h4 class="text-xs font-black tracking-wider text-white uppercase font-mono">HTTP Requests</h4>
+            <p class="text-[10px] text-blue-400 font-mono mt-0.5">POST /v1/completions</p>
+          </div>
+          <p class="text-[11px] text-gray-400 leading-tight">Async REST &amp; SSE prompt completion calls.</p>
+          <div class="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-blue-400 font-bold text-lg pointer-events-none">→</div>
+          <div class="lg:hidden text-center text-blue-400 font-bold text-base py-1">↓</div>
+        </div>
+
+        <!-- STEP 5: Measured TTFT / tokens -->
+        <div class="group relative p-4 rounded-xl bg-gray-900/90 border border-gray-800 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 hover:-translate-y-1 transition-all duration-300 space-y-2 text-center flex flex-col justify-between">
+          <div class="w-8 h-8 mx-auto rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center font-mono font-bold text-xs border border-orange-500/30 group-hover:scale-110 transition-transform">
+            5
+          </div>
+          <div>
+            <h4 class="text-xs font-black tracking-wider text-white uppercase font-mono">Measured Metrics</h4>
+            <p class="text-[10px] text-orange-400 font-mono mt-0.5">TTFT &amp; tok/s</p>
+          </div>
+          <p class="text-[11px] text-gray-400 leading-tight">Empirical sampling of latency &amp; generation speed.</p>
+          <div class="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-orange-400 font-bold text-lg pointer-events-none">→</div>
+          <div class="lg:hidden text-center text-orange-400 font-bold text-base py-1">↓</div>
+        </div>
+
+        <!-- STEP 6: JSON File -->
+        <div class="group relative p-4 rounded-xl bg-gray-900/90 border border-gray-800 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10 hover:-translate-y-1 transition-all duration-300 space-y-2 text-center flex flex-col justify-between">
+          <div class="w-8 h-8 mx-auto rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono font-bold text-xs border border-amber-500/30 group-hover:scale-110 transition-transform">
+            6
+          </div>
+          <div>
+            <h4 class="text-xs font-black tracking-wider text-white uppercase font-mono">JSON File</h4>
+            <p class="text-[10px] text-amber-400 font-mono mt-0.5">results/bench_*.json</p>
+          </div>
+          <p class="text-[11px] text-gray-400 leading-tight">Persistent disk storage for auditability.</p>
+          <div class="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-amber-400 font-bold text-lg pointer-events-none">→</div>
+          <div class="lg:hidden text-center text-amber-400 font-bold text-base py-1">↓</div>
+        </div>
+
+        <!-- STEP 7: Dashboard -->
+        <div class="group relative p-4 rounded-xl bg-gray-900/90 border border-gray-800 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 space-y-2 text-center flex flex-col justify-between">
+          <div class="w-8 h-8 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono font-bold text-xs border border-emerald-500/30 group-hover:scale-110 transition-transform">
+            7
+          </div>
+          <div>
+            <h4 class="text-xs font-black tracking-wider text-white uppercase font-mono">Dashboard</h4>
+            <p class="text-[10px] text-emerald-400 font-mono mt-0.5">Port 8080 (SSE)</p>
+          </div>
+          <p class="text-[11px] text-gray-400 leading-tight">Live SSE stream ingestion &amp; visual UI presentation.</p>
         </div>
 
       </div>
