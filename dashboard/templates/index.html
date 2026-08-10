@@ -724,27 +724,36 @@
     const seenEntries = new Set();
 
     function appendResultRow(data) {
-      const mode = data.mode || "unknown";
-      const avgTps = (data.avg_tps !== undefined && data.avg_tps !== null) ? Number(data.avg_tps).toFixed(1) : "—";
-      const avgTtft = (data.avg_ttft_ms !== undefined && data.avg_ttft_ms !== null) ? Number(data.avg_ttft_ms).toFixed(0) : "—";
-      const minTps = (data.min_tps !== undefined && data.min_tps !== null) ? Number(data.min_tps).toFixed(1) : "—";
-      const maxTps = (data.max_tps !== undefined && data.max_tps !== null) ? Number(data.max_tps).toFixed(1) : "—";
-      const timestamp = data.timestamp || new Date().toISOString();
+      const mode = (data.mode || "").toString().trim().toLowerCase();
+      if (!mode || mode === "benchmark" || mode === "unknown" || mode === "none") return;
+      
+      const avgTpsNum = Number(data.avg_tps);
+      const avgTtftNum = Number(data.avg_ttft_ms);
+      if (isNaN(avgTpsNum) || avgTpsNum <= 0) return;
+      if (isNaN(avgTtftNum) || avgTtftNum <= 0) return;
+
+      const avgTps = avgTpsNum.toFixed(1);
+      const avgTtft = avgTtftNum.toFixed(0);
+      const minTps = (data.min_tps !== undefined && data.min_tps !== null) ? Number(data.min_tps).toFixed(1) : avgTps;
+      const maxTps = (data.max_tps !== undefined && data.max_tps !== null) ? Number(data.max_tps).toFixed(1) : avgTps;
+      
+      const rawTimestamp = data.timestamp || new Date().toISOString();
+      const cleanTimestamp = rawTimestamp.toString().replace("T", " ").split(".")[0].replace("Z", "");
       const samples = data.samples || 5;
 
-      const entryKey = `${mode}-${timestamp}-${avgTps}`;
+      const entryKey = `${mode}-${cleanTimestamp}-${avgTps}`;
       if (seenEntries.has(entryKey)) return;
       seenEntries.add(entryKey);
 
       const tr = document.createElement("tr");
       tr.className = "hover:bg-cyan-500/10 transition-colors animate-fade-in";
       tr.innerHTML = `
-        <td class="p-3 font-sans font-bold text-white">${mode}</td>
+        <td class="p-3 font-sans font-bold text-white uppercase tracking-wider text-[11px]">${mode}</td>
         <td class="p-3 text-emerald-400 font-bold">${avgTps} tok/s</td>
         <td class="p-3 text-cyan-400 font-bold">${avgTtft} ms</td>
         <td class="p-3 text-gray-400">${minTps}</td>
         <td class="p-3 text-gray-400">${maxTps}</td>
-        <td class="p-3 text-gray-500">${timestamp}</td>
+        <td class="p-3 text-gray-400 font-mono text-[11px]">${cleanTimestamp}</td>
         <td class="p-3 text-purple-400">${samples}</td>
       `;
       resultsTableBody.prepend(tr);
